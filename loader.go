@@ -49,9 +49,6 @@ func loadData() {
 		// inclui música no dict de músicas
 		musicasDict[musica.UniqueID] = &musica
 
-		// inclui a música na lista que será ordenada por popularidade
-		musicas = append(musicas, &musica)
-
 		// conjunto único de gêneros
 		generosSet[musica.Genero] = struct{}{}
 
@@ -64,9 +61,6 @@ func loadData() {
 		// deve ser usado para melhorar o desempenho das buscas
 		generosMusicas[musica.Genero] = append(generosMusicas[musica.Genero], &musica)
 	}
-
-	// ordena musicas por popularidade
-	sort.Sort(PorPopularidade(musicas))
 
 	// para trabalhar melhor com json
 	for g := range generosSet {

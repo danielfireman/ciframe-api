@@ -15,8 +15,8 @@ import (
 	"math"
 	"github.com/julienschmidt/httprouter"
 	"github.com/newrelic/go-agent"
+	"sort"
 )
-
 
 func main() {
 	port := os.Getenv("PORT")
@@ -35,7 +35,6 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Println("Monitoramento NewRelic configurado com sucesso.", port)
-
 
 	loadData()
 	log.Println("Dados carregados com sucesso.")
@@ -79,17 +78,27 @@ var sequencias = map[string]int{
 }
 
 type Musica struct {
+	IDArtista    string `json:"id_artista"`
+	UniqueID     string `json:"id_unico_musica"`
+	Genero       string `json:"genero"`
+	ID           string `json:"id_musica"`
+	Artista      string `json:"nome_artista"`
+	Nome         string `json:"nome_musica"`
+	URL          string `json:"url"`
 	Popularidade int `json:"popularidade"`
 	Cifra        []string `json:"cifra"`
 	SeqFamosas   []string `json:"seq_famosas"`
 	Tom          string `json:"tom"`
-	Genero       string `json:"genero"`
-	Artista      string `json:"artista"`
-	IDArtista    string `json:"id_artista"`
-	UniqueID     string `json:"id_unico_musica"`
-	Nome         string `json:"popularidade"`
-	ID           string `json:"id_musica"`
-	URL          string `json:"url"`
+}
+
+type SearchResponse struct {
+	IDArtista string `json:"id_artista"`
+	UniqueID  string `json:"id_unico_musica"`
+	Genero    string `json:"genero"`
+	ID        string `json:"id_musica"`
+	Artista   string `json:"nome_artista"`
+	Nome      string `json:"nome_musica"`
+	URL       string `json:"url"`
 }
 
 func UniqueID(artista, id string) string {
@@ -124,7 +133,6 @@ func (p PorPopularidade) Less(i, j int) bool {
 var acordes = make(map[string]struct{})
 var musicasDict = make(map[string]*Musica)
 var generosMusicas = make(map[string][]*Musica)
-var musicas []*Musica
 var generosSet = make(map[string]struct{})
 var generos []string
 
@@ -132,26 +140,27 @@ var generos []string
 // params: key e generos (opcional). Caso generos não sejam definidos, a busca não irá filtrar por gênero.
 // exemplo 1: /search?key=no dia em que eu saí de casa
 // exemplo 2: /search?key=no dia em que eu saí de casa&generos=Rock,Samba '''
-func search(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	var generosABuscar []string
+func search(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	queryValues := r.URL.Query()
 
-	if p.ByName("generos") == "" {
+	var generosABuscar []string
+	if queryValues.Get("generos") == "" {
 		generosABuscar = generos
 	} else {
-		generosABuscar = strings.Split(p.ByName("generos"), ",")
+		generosABuscar = strings.Split(queryValues.Get("generos"), ",")
 	}
 
 	pagina := 1
-	if p.ByName("pagina") != "" {
-		p, err := strconv.Atoi(p.ByName("pagina"))
+	if queryValues.Get("pagina") != "" {
+		p, err := strconv.Atoi(queryValues.Get("pagina"))
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		}
 		pagina = p
 	}
 
-	keys := strings.Split(removerCombinantes(strings.ToLower(p.ByName("key"))), " ")
-	var resultado []*Musica
+	keys := strings.Split(removerCombinantes(strings.ToLower(queryValues.Get("key"))), " ")
+	var musicasRes []*Musica
 	for _, m := range applyFiltro(generosABuscar) {
 		text := fmt.Sprintf("%s %s", strings.ToLower(m.Artista), strings.ToLower(m.Nome))
 		toCheck := make(map[string]struct{})
@@ -162,11 +171,26 @@ func search(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			_, ok := toCheck[s]
 			return ok
 		}) {
-			resultado = append(resultado, m)
+			musicasRes = append(musicasRes, m)
 		}
 	}
+	sort.Sort(PorPopularidade(musicasRes))
 
-	b, err := json.Marshal(getPagina(resultado, pagina))
+	var resultado []SearchResponse
+	for _, m := range getPagina(musicasRes, pagina) {
+		resultado = append(resultado, SearchResponse{
+			IDArtista: m.IDArtista,
+			UniqueID : m.UniqueID,
+			Genero: m.Genero,
+			ID : m.ID,
+			Artista: m.Artista,
+			Nome: m.Nome,
+			URL: m.URL,
+		})
+
+	}
+
+	b, err := json.Marshal(resultado)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
