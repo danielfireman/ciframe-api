@@ -17,5 +17,6 @@
 			"revision": "e3c902a8b2c4c420ce61514795e05b8e28a6364e",
 			"revisionTime": "2016-06-07T23:38:40+02:00"
 		}
-	]
+	],
+	"rootPath": "github.com/danielfireman/ciframe-api"
 }
