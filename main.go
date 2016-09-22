@@ -56,15 +56,6 @@ func MonitoredEndpoint(app newrelic.Application, name string, h httprouter.Handl
 }
 
 const (
-	ARTISTA_ID = 0
-	MUSICA_ID = 1
-	ARTISTA = 2
-	MUSICA = 3
-	GENERO = 4
-	POPULARIDADE = 5
-	TOM = 6
-	SEQ_FAMOSA = 7
-	CIFRA = 8
 	TAM_PAGINA = 100
 )
 
@@ -99,6 +90,7 @@ type SearchResponse struct {
 	Artista   string `json:"nome_artista"`
 	Nome      string `json:"nome_musica"`
 	URL       string `json:"url"`
+	Popularidade int `json:"popularidade"`
 }
 
 func UniqueID(artista, id string) string {
@@ -127,7 +119,7 @@ func (p PorPopularidade) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 }
 func (p PorPopularidade) Less(i, j int) bool {
-	return p[i].Popularidade < p[j].Popularidade
+	return p[i].Popularidade > p[j].Popularidade
 }
 
 var acordes = make(map[string]struct{})
@@ -186,6 +178,7 @@ func search(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			Artista: m.Artista,
 			Nome: m.Nome,
 			URL: m.URL,
+			Popularidade: m.Popularidade,
 		})
 
 	}

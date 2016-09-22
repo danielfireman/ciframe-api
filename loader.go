@@ -10,6 +10,18 @@ import (
 	"log"
 )
 
+const (
+	ARTISTA_ID = 0
+	MUSICA_ID = 1
+	ARTISTA = 2
+	MUSICA = 3
+	GENERO = 4
+	POPULARIDADE = 5
+	TOM = 6
+	SEQ_FAMOSA = 7
+	CIFRA = 8
+)
+
 func loadData() {
 	f, err := os.Open("data/dataset_final.csv")
 	if err != nil {
