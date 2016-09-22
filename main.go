@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"math"
 	"github.com/julienschmidt/httprouter"
+	"github.com/newrelic/go-agent"
 )
 
 
@@ -24,14 +25,35 @@ func main() {
 	}
 	log.Println("Porta utilizada", port)
 
+	nrLicence := os.Getenv("NEW_RELIC_LICENSE_KEY")
+	if nrLicence == "" {
+		log.Fatal("$NEW_RELIC_LICENSE_KEY must be set")
+	}
+	config := newrelic.NewConfig("ciframe-api", nrLicence)
+	app, err := newrelic.NewApplication(config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Monitoramento NewRelic configurado com sucesso.", port)
+
+
 	loadData()
 	log.Println("Dados carregados com sucesso.")
 
 	router := httprouter.New()
-	router.GET("/search", search)
+	router.GET("/search", MonitoredEndpoint(app, "search", search))
+
 	log.Println("Serviço inicializado.")
 
 	log.Fatal(http.ListenAndServe(":" + port, router))
+}
+
+func MonitoredEndpoint(app newrelic.Application, name string, h httprouter.Handle) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		txn := app.StartTransaction(name, w, r)
+		defer txn.End()
+		h(w, r, p)
+	}
 }
 
 const (
