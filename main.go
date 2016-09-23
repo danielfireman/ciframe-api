@@ -30,7 +30,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Monitoramento NewRelic configurado com sucesso.", port)
+	log.Println("Monitoramento NewRelic configurado com sucesso.")
 
 	loadData()
 	log.Println("Dados carregados com sucesso.")
@@ -54,7 +54,7 @@ func main() {
 	router.GET("/similares", MonitoredEndpoint(app, "similares", SimilaresHandler))
 	router.OPTIONS("/similares", MonitoredEndpoint(app, "similares_cors", openCORS))
 
-	log.Println("Serviço inicializado.")
+	log.Println("Serviço inicializado na porta ", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
