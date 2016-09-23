@@ -27,16 +27,16 @@ type SimilaresResponse struct {
 }
 
 // PorMaiorIntersecao implementa sort.Interface for []*Musica baseado no campo Popularidade
-type PorMaiorIntersecao []*SimilaresResponse
+type ProMenorDiferenca []*SimilaresResponse
 
-func (p PorMaiorIntersecao) Len() int {
+func (p ProMenorDiferenca) Len() int {
 	return len(p)
 }
-func (p PorMaiorIntersecao) Swap(i, j int) {
+func (p ProMenorDiferenca) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 }
-func (p PorMaiorIntersecao) Less(i, j int) bool {
-	return len(p[i].Intersecao) > len(p[j].Intersecao)
+func (p ProMenorDiferenca) Less(i, j int) bool {
+	return len(p[i].Diferenca) < len(p[j].Diferenca)
 }
 
 var sequencias = map[string]int{
@@ -82,12 +82,13 @@ func SimilaresHandler(w http.ResponseWriter, r *http.Request, p httprouter.Param
 				}
 
 			}
-			sort.Sort(PorMaiorIntersecao(similares))
+			sort.Sort(ProMenorDiferenca(similares))
 			b, err := json.Marshal(similares)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
+			w.Header().Add("Access-Control-Allow-Origin", "*")
 			fmt.Fprintf(w, string(b))
 			return
 		}
@@ -130,11 +131,13 @@ func SimilaresHandler(w http.ResponseWriter, r *http.Request, p httprouter.Param
 		}
 
 	}
+	sort.Sort(ProMenorDiferenca(similares))
 	i, f := limitesDaPagina(len(similares), pagina)
 	b, err := json.Marshal(similares[i:f])
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	w.Header().Add("Access-Control-Allow-Origin", "*")
 	fmt.Fprintf(w, string(b))
 }

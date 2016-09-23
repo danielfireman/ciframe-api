@@ -20,6 +20,6 @@ func GetMusicaHandler(w http.ResponseWriter, r *http.Request, p httprouter.Param
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	w.Header().Add("Access-Control-Allow-Origin", "*")
 	fmt.Fprintf(w, string(b))
-	w.WriteHeader(http.StatusOK)
 }
