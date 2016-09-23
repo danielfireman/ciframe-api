@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	sets "github.com/deckarep/golang-set"
-	"github.com/julienschmidt/httprouter"
 	"github.com/newrelic/go-agent"
+	"github.com/julienschmidt/httprouter"
 )
 
 func main() {
@@ -37,15 +37,31 @@ func main() {
 
 	router := httprouter.New()
 	router.GET("/search", MonitoredEndpoint(app, "search", SearchHandler))
+	router.OPTIONS("/search", MonitoredEndpoint(app, "search_cors", openCORS))
+
 	router.GET("/musicas", MonitoredEndpoint(app, "musicas", MusicasHandler))
+	router.OPTIONS("/musicas", MonitoredEndpoint(app, "musicas_cors", openCORS))
+
 	router.GET("/musica/:id", MonitoredEndpoint(app, "get_musica", MusicasHandler))
+	router.OPTIONS("/musica/:id", MonitoredEndpoint(app, "get_musica_cors", openCORS))
+
 	router.GET("/generos", MonitoredEndpoint(app, "generos", GenerosHandler))
+	router.OPTIONS("/generos", MonitoredEndpoint(app, "generos_cors", openCORS))
+
 	router.GET("/acordes", MonitoredEndpoint(app, "acordes", AcordesHandler))
+	router.OPTIONS("/acordes", MonitoredEndpoint(app, "acordes_cors", openCORS))
+
 	router.GET("/similares", MonitoredEndpoint(app, "similares", SimilaresHandler))
+	router.OPTIONS("/similares", MonitoredEndpoint(app, "similares_cors", openCORS))
 
 	log.Println("Serviço inicializado.")
-
 	log.Fatal(http.ListenAndServe(":"+port, router))
+}
+
+func openCORS(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	w.Header().Set("Access-Control-Allow-Headers:", "accept, content-type")
+	w.Header().Set("Access-Control-Allow-Methods:", "POST")
+	w.Header().Set("Access-Control-Allow-Origin", "http://lp.usemyto.com")
 }
 
 func MonitoredEndpoint(app newrelic.Application, name string, h httprouter.Handle) httprouter.Handle {
@@ -92,8 +108,9 @@ func (m *Musica) Acordes() sets.Set {
 
 // PorPopularidade implementa sort.Interface for []*Musica baseado no campo Popularidade
 type PorPopularidade []*Musica
-func (p PorPopularidade) Len() int { return len(p) }
-func (p PorPopularidade) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+
+func (p PorPopularidade) Len() int           { return len(p) }
+func (p PorPopularidade) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p PorPopularidade) Less(i, j int) bool { return p[i].Popularidade > p[j].Popularidade }
 
 var acordes []string
