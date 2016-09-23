@@ -46,7 +46,7 @@ func loadData() {
 			Genero:     dados[GENERO],
 			Tom:        dados[TOM],
 			UniqueID:   UniqueID(dados[ARTISTA], dados[MUSICA_ID]),
-			URL:        URL(dados[ARTISTA], dados[MUSICA_ID]),
+			URL:        URL(dados[ARTISTA_ID], dados[MUSICA_ID]),
 			SeqFamosas: strings.Split(dados[SEQ_FAMOSA], ";"),
 		}
 
