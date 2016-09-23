@@ -3,6 +3,12 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "Wh56y74a8ih88XBvGg0wmPVceW4=",
+			"path": "github.com/deckarep/golang-set",
+			"revision": "a847793a0d5f0cfd57c3ece4242e75223cdaf898",
+			"revisionTime": "2016-07-27T17:05:31Z"
+		},
+		{
 			"path": "github.com/julienschmidt/httprouter",
 			"revision": "21439ef4d70ba4f3e2a5ed9249e7b03af4019b40",
 			"revisionTime": "2016-01-06T09:35:25+01:00"
