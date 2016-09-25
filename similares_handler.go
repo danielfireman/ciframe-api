@@ -120,7 +120,7 @@ func (s *Similares) GetHandler() httprouter.Handle {
 				return
 			}
 		}
-		buildSegment := newrelic.StartSegment(txn, "find")
+		buildSegment := newrelic.StartSegment(txn, "similares_find")
 		similares := sets.NewSet()
 		for a := range acordes.Iter() {
 			for _, m := range musicasPorAcorde[a.(string)] {
@@ -145,14 +145,14 @@ func (s *Similares) GetHandler() httprouter.Handle {
 
 		}
 		buildSegment.End()
-		sortSegment := newrelic.StartSegment(txn, "sort")
+		sortSegment := newrelic.StartSegment(txn, "similares_sort")
 		similaresSlice := similares.ToSlice()
 		sort.Sort(ProMenorDiferenca(similaresSlice))
 		sortSegment.End()
 
 		i, f := limitesDaPagina(len(similaresSlice), pagina)
 
-		marshallingSegment := newrelic.StartSegment(txn, "marshalling")
+		marshallingSegment := newrelic.StartSegment(txn, "similares_marshalling")
 		b, err := json.Marshal(similaresSlice[i:f])
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
