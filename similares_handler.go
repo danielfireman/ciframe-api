@@ -114,7 +114,7 @@ func SimilaresHandler(w http.ResponseWriter, r *http.Request, p httprouter.Param
 	similares := sets.NewSet()
 	for a := range acordes.Iter() {
 		for _, m := range musicasPorAcorde[a.(string)] {
-			if generosABuscar.Contains(m.Genero) {
+			if generosABuscar.Cardinality() == 0 || generosABuscar.Contains(m.Genero) {
 				mArcordesSet := m.Acordes()
 				similares.Add(&SimilaresResponse{
 					UniqueID:     m.UniqueID,
