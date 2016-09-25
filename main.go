@@ -36,6 +36,17 @@ func main() {
 	log.Println("Dados carregados com sucesso.")
 
 	router := httprouter.New()
+	g, err := NewGeneros(app, generosSet)
+	if err != nil {
+		log.Fatal(err)
+	}
+	router.GET("/generos", MonitoredEndpoint(app, "generos", g.GetHandler()))
+	router.OPTIONS("/generos", openCORS)
+
+	s := Similares{app}
+	router.GET("/similares", s.GetHandler())
+	router.OPTIONS("/similares", openCORS)
+
 	router.GET("/search", MonitoredEndpoint(app, "search", SearchHandler))
 	router.OPTIONS("/search", MonitoredEndpoint(app, "search_cors", openCORS))
 
@@ -45,19 +56,8 @@ func main() {
 	router.GET("/musica/:id", MonitoredEndpoint(app, "get_musica", MusicasHandler))
 	router.OPTIONS("/musica/:id", MonitoredEndpoint(app, "get_musica_cors", openCORS))
 
-
-	g, err := NewGeneros(generosSet)
-	if err != nil {
-		log.Fatal(err)
-	}
-	router.GET("/generos", MonitoredEndpoint(app, "generos", g.GetHandler()))
-	router.OPTIONS("/generos", MonitoredEndpoint(app, "generos_cors", openCORS))
-
 	router.GET("/acordes", MonitoredEndpoint(app, "acordes", AcordesHandler))
 	router.OPTIONS("/acordes", MonitoredEndpoint(app, "acordes_cors", openCORS))
-
-	router.GET("/similares", MonitoredEndpoint(app, "similares", SimilaresHandler))
-	router.OPTIONS("/similares", MonitoredEndpoint(app, "similares_cors", openCORS))
 
 	log.Println("Serviço inicializado na porta ", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
