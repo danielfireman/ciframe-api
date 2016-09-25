@@ -65,7 +65,7 @@ func loadData() {
 		musicasDict[musica.UniqueID] = &musica
 
 		// conjunto único de gêneros
-		generosSet[musica.Genero] = struct{}{}
+		generosSet.Add(musica.Genero)
 
 		// conjunto único de acordes
 		acordesSet.Union(musica.Acordes())
@@ -80,12 +80,6 @@ func loadData() {
 
 	// Ordena todas as músicas por popularidade.
 	sort.Sort(PorPopularidade(musicas))
-
-	// para trabalhar melhor com json;
-	for g := range generosSet {
-		generos = append(generos, g)
-	}
-	sort.Sort(sort.StringSlice(generos))
 
 	// transformando o conjunto único de acordes numa lista.
 	// melhor eficiência e melhor para trabalhar com json.

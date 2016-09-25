@@ -45,7 +45,12 @@ func main() {
 	router.GET("/musica/:id", MonitoredEndpoint(app, "get_musica", MusicasHandler))
 	router.OPTIONS("/musica/:id", MonitoredEndpoint(app, "get_musica_cors", openCORS))
 
-	router.GET("/generos", MonitoredEndpoint(app, "generos", GenerosHandler))
+
+	g, err := NewGeneros(generosSet)
+	if err != nil {
+		log.Fatal(err)
+	}
+	router.GET("/generos", MonitoredEndpoint(app, "generos", g.GetHandler()))
 	router.OPTIONS("/generos", MonitoredEndpoint(app, "generos_cors", openCORS))
 
 	router.GET("/acordes", MonitoredEndpoint(app, "acordes", AcordesHandler))
@@ -116,8 +121,7 @@ func (p PorPopularidade) Less(i, j int) bool { return p[i].Popularidade > p[j].P
 var acordes []string
 var musicasDict = make(map[string]*Musica)
 var generosMusicas = make(map[string][]*Musica)
-var generosSet = make(map[string]struct{})
-var generos []string  // lista de todos os gêneros
+var generosSet = sets.NewSet()
 var musicas []*Musica // todas as músicas, ordenadas por popularidade.
 
 func limitesDaPagina(size int, pagina int) (int, int) {
@@ -137,12 +141,25 @@ func getPaginaFromRequest(r *http.Request) (int, error) {
 	return pagina, nil
 }
 
+// retorns generos do request (podem ser separados por vírgula).
 func generosFromRequest(r *http.Request) []string {
 	var generosABuscar []string
-	if r.URL.Query().Get("generos") == "" {
-		generosABuscar = generos
-	} else {
+	if r.URL.Query().Get("generos") != "" {
 		generosABuscar = strings.Split(r.URL.Query().Get("generos"), ",")
 	}
 	return generosABuscar
 }
+
+func applyFiltro(generos []string) []*Musica {
+	if len(generos) == 0 {
+		return musicas
+	}
+	var collection []*Musica
+	for _, g := range generos {
+		if generosSet.Contains(g) {
+			collection = append(collection, generosMusicas[g]...)
+		}
+	}
+	return collection
+}
+

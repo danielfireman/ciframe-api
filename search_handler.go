@@ -80,16 +80,6 @@ func SearchHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	fmt.Fprintf(w, string(b))
 }
 
-func applyFiltro(generos []string) []*Musica {
-	var collection []*Musica
-	for _, g := range generos {
-		if _, ok := generosSet[g]; ok {
-			collection = append(collection, generosMusicas[g]...)
-		}
-	}
-	return collection
-}
-
 func all(vs []string, f func(string) bool) bool {
 	for _, v := range vs {
 		if !f(v) {
