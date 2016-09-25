@@ -27,7 +27,7 @@ type SimilaresResponse struct {
 }
 
 // PorMaiorIntersecao implementa sort.Interface for []*Musica baseado no campo Popularidade
-type ProMenorDiferenca []*SimilaresResponse
+type ProMenorDiferenca []interface{}
 
 func (p ProMenorDiferenca) Len() int {
 	return len(p)
@@ -36,7 +36,7 @@ func (p ProMenorDiferenca) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 }
 func (p ProMenorDiferenca) Less(i, j int) bool {
-	return len(p[i].Diferenca) < len(p[j].Diferenca)
+	return len(p[i].(*SimilaresResponse).Diferenca) < len(p[j].(*SimilaresResponse).Diferenca)
 }
 
 var sequencias = map[string]int{
@@ -59,14 +59,14 @@ func SimilaresHandler(w http.ResponseWriter, r *http.Request, p httprouter.Param
 
 	if queryValues.Get("sequencia") != "" {
 		acordes := strings.Replace(queryValues.Get("sequencia"), ",", "", -1)
-		var similares []*SimilaresResponse
+		similares := sets.NewSet()
 		idSeq, ok := sequencias[acordes]
 		if ok {
 			strIdSeq := strconv.Itoa(idSeq)
 			for _, m := range applyFiltro(generosABuscar) {
 				for _, seq := range m.SeqFamosas {
 					if seq == strIdSeq {
-						similares = append(similares, &SimilaresResponse{
+						similares.Add(&SimilaresResponse{
 							UniqueID:     m.UniqueID,
 							IDArtista:    m.IDArtista,
 							ID:           m.ID,
@@ -82,8 +82,9 @@ func SimilaresHandler(w http.ResponseWriter, r *http.Request, p httprouter.Param
 				}
 
 			}
-			sort.Sort(ProMenorDiferenca(similares))
-			b, err := json.Marshal(similares)
+			similaresSlice := similares.ToSlice()
+			sort.Sort(ProMenorDiferenca(similaresSlice))
+			b, err := json.Marshal(similaresSlice)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
@@ -110,30 +111,32 @@ func SimilaresHandler(w http.ResponseWriter, r *http.Request, p httprouter.Param
 			return
 		}
 	}
-	var similares []*SimilaresResponse
-	for _, m := range applyFiltro(generosABuscar) {
-		mArcordesSet := m.Acordes()
-		inter := acordes.Intersect(mArcordesSet)
-		if inter.Cardinality() > 0 {
-			similares = append(similares, &SimilaresResponse{
-				UniqueID:     m.UniqueID,
-				IDArtista:    m.IDArtista,
-				ID:           m.ID,
-				Artista:      m.Artista,
-				Nome:         m.Nome,
-				Popularidade: m.Popularidade,
-				Acordes:      m.Acordes().ToSlice(),
-				Genero:       m.Genero,
-				URL:          m.URL,
-				Diferenca:    mArcordesSet.Difference(acordes).ToSlice(),
-				Intersecao:   inter.ToSlice(),
-			})
+	similares := sets.NewSet()
+	for a := range acordes.Iter() {
+		for _, m := range musicasPorAcorde[a.(string)] {
+			if generosABuscar.Contains(m.Genero) {
+				mArcordesSet := m.Acordes()
+				similares.Add(&SimilaresResponse{
+					UniqueID:     m.UniqueID,
+					IDArtista:    m.IDArtista,
+					ID:           m.ID,
+					Artista:      m.Artista,
+					Nome:         m.Nome,
+					Popularidade: m.Popularidade,
+					Acordes:      m.Acordes().ToSlice(),
+					Genero:       m.Genero,
+					URL:          m.URL,
+					Diferenca:    mArcordesSet.Difference(acordes).ToSlice(),
+					Intersecao:   mArcordesSet.Intersect(acordes).ToSlice(),
+				})
+			}
 		}
 
 	}
-	sort.Sort(ProMenorDiferenca(similares))
-	i, f := limitesDaPagina(len(similares), pagina)
-	b, err := json.Marshal(similares[i:f])
+	similaresSlice := similares.ToSlice()
+	sort.Sort(ProMenorDiferenca(similaresSlice))
+	i, f := limitesDaPagina(len(similaresSlice), pagina)
+	b, err := json.Marshal(similaresSlice[i:f])
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

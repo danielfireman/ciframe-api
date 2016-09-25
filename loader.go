@@ -67,8 +67,14 @@ func loadData() {
 		// conjunto único de gêneros
 		generosSet.Add(musica.Genero)
 
+		// Acordes.
+		mAcordes := musica.Acordes()
 		// conjunto único de acordes
-		acordesSet.Union(musica.Acordes())
+		acordesSet.Union(mAcordes)
+		// Populando mapa de músicas por acorde.
+		for a := range mAcordes.Iter() {
+			musicasPorAcorde[a.(string)] = append(musicasPorAcorde[a.(string)], &musica)
+		}
 
 		// constrói dict mapeando gênero para músicas
 		// deve ser usado para melhorar o desempenho das buscas
@@ -83,7 +89,7 @@ func loadData() {
 
 	// transformando o conjunto único de acordes numa lista.
 	// melhor eficiência e melhor para trabalhar com json.
-	for _, a := range acordesSet.ToSlice() {
+	for a := range acordesSet.Iter() {
 		acordes = append(acordes, a.(string))
 	}
 

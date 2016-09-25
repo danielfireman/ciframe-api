@@ -123,6 +123,7 @@ var musicasDict = make(map[string]*Musica)
 var generosMusicas = make(map[string][]*Musica)
 var generosSet = sets.NewSet()
 var musicas []*Musica // todas as músicas, ordenadas por popularidade.
+var musicasPorAcorde = make(map[string][]*Musica)
 
 func limitesDaPagina(size int, pagina int) (int, int) {
 	i := (pagina - 1) * TAM_PAGINA
@@ -142,22 +143,24 @@ func getPaginaFromRequest(r *http.Request) (int, error) {
 }
 
 // retorns generos do request (podem ser separados por vírgula).
-func generosFromRequest(r *http.Request) []string {
-	var generosABuscar []string
+func generosFromRequest(r *http.Request) sets.Set {
+	returned := sets.NewSet()
 	if r.URL.Query().Get("generos") != "" {
-		generosABuscar = strings.Split(r.URL.Query().Get("generos"), ",")
+		for _, g := range strings.Split(r.URL.Query().Get("generos"), ",") {
+			returned.Add(g)
+		}
 	}
-	return generosABuscar
+	return returned
 }
 
-func applyFiltro(generos []string) []*Musica {
-	if len(generos) == 0 {
+func applyFiltro(generos sets.Set) []*Musica {
+	if generos.Cardinality() == 0 {
 		return musicas
 	}
 	var collection []*Musica
-	for _, g := range generos {
-		if generosSet.Contains(g) {
-			collection = append(collection, generosMusicas[g]...)
+	for g := range generos.Iter() {
+		if generosSet.Contains(g.(string)) {
+			collection = append(collection, generosMusicas[g.(string)]...)
 		}
 	}
 	return collection
