@@ -3,15 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
-	"sort"
 
 	sets "github.com/deckarep/golang-set"
 	"github.com/julienschmidt/httprouter"
 	"github.com/newrelic/go-agent"
-	"github.com/labstack/gommon/log"
 )
 
 type SimilaresResponse struct {

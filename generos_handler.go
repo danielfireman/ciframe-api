@@ -1,9 +1,9 @@
 package main
 
 import (
-	"net/http"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"sort"
 
 	sets "github.com/deckarep/golang-set"
@@ -12,7 +12,7 @@ import (
 )
 
 type Generos struct {
-	app newrelic.Application
+	app      newrelic.Application
 	jsonData string
 }
 
