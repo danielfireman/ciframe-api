@@ -28,16 +28,16 @@ type SimilaresResponse struct {
 }
 
 // PorMaiorIntersecao implementa sort.Interface for []*Musica baseado no campo Popularidade
-type ProMenorDiferenca []interface{}
+type PorMenorDiferenca []*SimilaresResponse
 
-func (p ProMenorDiferenca) Len() int {
+func (p PorMenorDiferenca) Len() int {
 	return len(p)
 }
-func (p ProMenorDiferenca) Swap(i, j int) {
+func (p PorMenorDiferenca) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 }
-func (p ProMenorDiferenca) Less(i, j int) bool {
-	return len(p[i].(*SimilaresResponse).Diferenca) < len(p[j].(*SimilaresResponse).Diferenca)
+func (p PorMenorDiferenca) Less(i, j int) bool {
+	return len(p[i].Diferenca) < len(p[j].Diferenca)
 }
 
 type Similares struct {
@@ -68,14 +68,14 @@ func (s *Similares) GetHandler() httprouter.Handle {
 
 		if queryValues.Get("sequencia") != "" {
 			acordes := strings.Replace(queryValues.Get("sequencia"), ",", "", -1)
-			similares := sets.NewSet()
+			var response []*SimilaresResponse
 			idSeq, ok := sequencias[acordes]
 			if ok {
 				strIdSeq := strconv.Itoa(idSeq)
 				for _, m := range applyFiltro(generosABuscar) {
 					for _, seq := range m.SeqFamosas {
 						if seq == strIdSeq {
-							similares.Add(&SimilaresResponse{
+							response = append(response, &SimilaresResponse{
 								UniqueID:     m.UniqueID,
 								IDArtista:    m.IDArtista,
 								ID:           m.ID,
@@ -91,9 +91,8 @@ func (s *Similares) GetHandler() httprouter.Handle {
 					}
 
 				}
-				similaresSlice := similares.ToSlice()
-				sort.Sort(ProMenorDiferenca(similaresSlice))
-				b, err := json.Marshal(similaresSlice)
+				sort.Sort(PorMenorDiferenca(response))
+				b, err := json.Marshal(response)
 				if err != nil {
 					w.WriteHeader(http.StatusInternalServerError)
 					return
@@ -121,39 +120,49 @@ func (s *Similares) GetHandler() httprouter.Handle {
 			}
 		}
 		buildSegment := newrelic.StartSegment(txn, "similares_find")
-		similares := sets.NewSet()
+		musicasSimilares := sets.NewSet()
 		for a := range acordes.Iter() {
-			for _, m := range musicasPorAcorde[a.(string)] {
-				// NOTE: sabemos que é um conjunto, só não queremos pagar o preço de construir o objeto e calcular diferenças e etc.
-				if (generosABuscar.Cardinality() == 0 || generosABuscar.Contains(m.Genero)) && !similares.Contains(m) {
-					mArcordesSet := m.Acordes()
-					similares.Add(&SimilaresResponse{
-						UniqueID:     m.UniqueID,
-						IDArtista:    m.IDArtista,
-						ID:           m.ID,
-						Artista:      m.Artista,
-						Nome:         m.Nome,
-						Popularidade: m.Popularidade,
-						Acordes:      m.Acordes().ToSlice(),
-						Genero:       m.Genero,
-						URL:          m.URL,
-						Diferenca:    mArcordesSet.Difference(acordes).ToSlice(),
-						Intersecao:   mArcordesSet.Intersect(acordes).ToSlice(),
-					})
+			if _, ok := musicasPorAcorde[a.(string)]; ok {
+				musicasSimilares.Union(musicasPorAcorde[a.(string)])
+			}
+		}
+		if generosABuscar.Cardinality() > 0 {
+			porGenero := sets.NewSet()
+			for g := range generosABuscar.Iter() {
+				if _, ok := musicasPorAcorde[g.(string)]; ok {
+					porGenero.Union(generosMusicas[g.(string)])
 				}
 			}
-
+			musicasSimilares.Intersect(porGenero)
 		}
+		var response []*SimilaresResponse
+		for mI := range musicasSimilares.Iter() {
+			m := mI.(*Musica)
+			mArcordesSet := m.Acordes()
+			response = append(response, &SimilaresResponse{
+				UniqueID:     m.UniqueID,
+				IDArtista:    m.IDArtista,
+				ID:           m.ID,
+				Artista:      m.Artista,
+				Nome:         m.Nome,
+				Popularidade: m.Popularidade,
+				Acordes:      m.Acordes().ToSlice(),
+				Genero:       m.Genero,
+				URL:          m.URL,
+				Diferenca:    mArcordesSet.Difference(acordes).ToSlice(),
+				Intersecao:   mArcordesSet.Intersect(acordes).ToSlice(),
+			})
+		}
+
 		buildSegment.End()
 		sortSegment := newrelic.StartSegment(txn, "similares_sort")
-		similaresSlice := similares.ToSlice()
-		sort.Sort(ProMenorDiferenca(similaresSlice))
+		sort.Sort(PorMenorDiferenca(response))
 		sortSegment.End()
 
-		i, f := limitesDaPagina(len(similaresSlice), pagina)
+		i, f := limitesDaPagina(len(response), pagina)
 
 		marshallingSegment := newrelic.StartSegment(txn, "similares_marshalling")
-		b, err := json.Marshal(similaresSlice[i:f])
+		b, err := json.Marshal(response[i:f])
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

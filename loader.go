@@ -73,12 +73,18 @@ func loadData() {
 		acordesSet.Union(mAcordes)
 		// Populando mapa de músicas por acorde.
 		for a := range mAcordes.Iter() {
-			musicasPorAcorde[a.(string)] = append(musicasPorAcorde[a.(string)], &musica)
+			if _, ok := musicasPorAcorde[a.(string)]; !ok {
+				musicasPorAcorde[a.(string)] = sets.NewSet()
+			}
+			musicasPorAcorde[a.(string)].Add(&musica)
 		}
 
 		// constrói dict mapeando gênero para músicas
 		// deve ser usado para melhorar o desempenho das buscas
-		generosMusicas[musica.Genero] = append(generosMusicas[musica.Genero], &musica)
+		if _, ok := generosMusicas[musica.Genero]; !ok {
+			generosMusicas[musica.Genero] = sets.NewSet()
+		}
+		generosMusicas[musica.Genero].Add(&musica)
 
 		// popula lista com todas as músicas.
 		musicas = append(musicas, &musica)
@@ -91,11 +97,6 @@ func loadData() {
 	// melhor eficiência e melhor para trabalhar com json.
 	for a := range acordesSet.Iter() {
 		acordes = append(acordes, a.(string))
-	}
-
-	// ordena músicas de cada gênero por popularidade
-	for _, v := range generosMusicas {
-		sort.Sort(PorPopularidade(v))
 	}
 }
 

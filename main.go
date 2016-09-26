@@ -120,10 +120,10 @@ func (p PorPopularidade) Less(i, j int) bool { return p[i].Popularidade > p[j].P
 
 var acordes []string
 var musicasDict = make(map[string]*Musica)
-var generosMusicas = make(map[string][]*Musica)
+var generosMusicas = make(map[string]sets.Set)
 var generosSet = sets.NewSet()
 var musicas []*Musica // todas as músicas, ordenadas por popularidade.
-var musicasPorAcorde = make(map[string][]*Musica)
+var musicasPorAcorde = make(map[string]sets.Set)
 
 func limitesDaPagina(size int, pagina int) (int, int) {
 	i := (pagina - 1) * TAM_PAGINA
@@ -160,7 +160,9 @@ func applyFiltro(generos sets.Set) []*Musica {
 	var collection []*Musica
 	for g := range generos.Iter() {
 		if generosSet.Contains(g.(string)) {
-			collection = append(collection, generosMusicas[g.(string)]...)
+			for _, m := range generosMusicas[g.(string)].ToSlice() {
+				collection = append(collection, m.(*Musica))
+			}
 		}
 	}
 	return collection
