@@ -130,14 +130,14 @@ func (s *Similares) GetHandler() httprouter.Handle {
 			porGenero := sets.NewSet()
 			for g := range generosABuscar.Iter() {
 				if _, ok := musicasPorAcorde[g.(string)]; ok {
-					porGenero.Union(generosMusicas[g.(string)])
+					porGenero.Union(musicasPorGenero[g.(string)])
 				}
 			}
 			musicasSimilares.Intersect(porGenero)
 		}
 		var response []*SimilaresResponse
-		for mI := range musicasSimilares.Iter() {
-			m := mI.(*Musica)
+		for mID := range musicasSimilares.Iter() {
+			m := musicasDict[mID.(string)]
 			mArcordesSet := m.Acordes()
 			response = append(response, &SimilaresResponse{
 				UniqueID:     m.UniqueID,

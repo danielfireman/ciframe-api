@@ -76,15 +76,15 @@ func loadData() {
 			if _, ok := musicasPorAcorde[a.(string)]; !ok {
 				musicasPorAcorde[a.(string)] = sets.NewSet()
 			}
-			musicasPorAcorde[a.(string)].Add(&musica)
+			musicasPorAcorde[a.(string)].Add(musica.UniqueID)
 		}
 
 		// constrói dict mapeando gênero para músicas
 		// deve ser usado para melhorar o desempenho das buscas
-		if _, ok := generosMusicas[musica.Genero]; !ok {
-			generosMusicas[musica.Genero] = sets.NewSet()
+		if _, ok := musicasPorGenero[musica.Genero]; !ok {
+			musicasPorGenero[musica.Genero] = sets.NewSet()
 		}
-		generosMusicas[musica.Genero].Add(&musica)
+		musicasPorGenero[musica.Genero].Add(musica.UniqueID)
 
 		// popula lista com todas as músicas.
 		musicas = append(musicas, &musica)
