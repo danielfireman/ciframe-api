@@ -123,19 +123,18 @@ func (s *Similares) GetHandler() httprouter.Handle {
 		buildSegment := newrelic.StartSegment(txn, "similares_find")
 		musicasSimilares := sets.NewSet()
 		for a := range acordes.Iter() {
-			if _, ok := musicasPorAcorde[a.(string)]; ok {
-				musicasSimilares.Union(musicasPorAcorde[a.(string)])
+			if m, ok := musicasPorAcorde[a.(string)]; ok {
+				musicasSimilares = musicasSimilares.Union(m)
 			}
 		}
-		log.Println("Músicas similares: ", musicasSimilares.Cardinality())
 		if generosABuscar.Cardinality() > 0 {
 			porGenero := sets.NewSet()
 			for g := range generosABuscar.Iter() {
-				if _, ok := musicasPorGenero[g.(string)]; ok {
-					porGenero.Union(musicasPorGenero[g.(string)])
+				if m, ok := musicasPorGenero[g.(string)]; ok {
+					porGenero = porGenero.Union(m)
 				}
 			}
-			musicasSimilares.Intersect(porGenero)
+			musicasSimilares = musicasSimilares.Intersect(porGenero)
 		}
 		var response []*SimilaresResponse
 		for mID := range musicasSimilares.Iter() {
