@@ -119,7 +119,7 @@ func (p PorPopularidade) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p PorPopularidade) Less(i, j int) bool { return p[i].Popularidade > p[j].Popularidade }
 
 var acordes []string
-var musicasDict = make(map[string]*Musica)
+var musicasDict = make(map[string]*Musica)  // Mapa de músicas indexado por ids únicos.
 var generosSet = sets.NewSet()
 var musicas []*Musica // todas as músicas, ordenadas por popularidade.
 

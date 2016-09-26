@@ -11,6 +11,7 @@ import (
 	sets "github.com/deckarep/golang-set"
 	"github.com/julienschmidt/httprouter"
 	"github.com/newrelic/go-agent"
+	"github.com/labstack/gommon/log"
 )
 
 type SimilaresResponse struct {
@@ -126,10 +127,11 @@ func (s *Similares) GetHandler() httprouter.Handle {
 				musicasSimilares.Union(musicasPorAcorde[a.(string)])
 			}
 		}
+		log.Println("Músicas similares: ", musicasSimilares.Cardinality())
 		if generosABuscar.Cardinality() > 0 {
 			porGenero := sets.NewSet()
 			for g := range generosABuscar.Iter() {
-				if _, ok := musicasPorAcorde[g.(string)]; ok {
+				if _, ok := musicasPorGenero[g.(string)]; ok {
 					porGenero.Union(musicasPorGenero[g.(string)])
 				}
 			}
@@ -146,7 +148,7 @@ func (s *Similares) GetHandler() httprouter.Handle {
 				Artista:      m.Artista,
 				Nome:         m.Nome,
 				Popularidade: m.Popularidade,
-				Acordes:      m.Acordes().ToSlice(),
+				Acordes:      mArcordesSet.ToSlice(),
 				Genero:       m.Genero,
 				URL:          m.URL,
 				Diferenca:    mArcordesSet.Difference(acordes).ToSlice(),
