@@ -13,15 +13,15 @@ import (
 )
 
 const (
-	ARTISTA_ID   = 0
-	MUSICA_ID    = 1
-	ARTISTA      = 2
-	MUSICA       = 3
-	GENERO       = 4
+	ARTISTA_ID = 0
+	MUSICA_ID = 1
+	ARTISTA = 2
+	MUSICA = 3
+	GENERO = 4
 	POPULARIDADE = 5
-	TOM          = 6
-	SEQ_FAMOSA   = 7
-	CIFRA        = 8
+	TOM = 6
+	SEQ_FAMOSA = 7
+	CIFRA = 8
 )
 
 func loadData() {
@@ -45,7 +45,7 @@ func loadData() {
 			Nome:       dados[MUSICA],
 			Genero:     dados[GENERO],
 			Tom:        dados[TOM],
-			UniqueID:   UniqueID(dados[ARTISTA], dados[MUSICA_ID]),
+			UniqueID:   UniqueID(dados[ARTISTA_ID], dados[MUSICA_ID]),
 			URL:        URL(dados[ARTISTA_ID], dados[MUSICA_ID]),
 			SeqFamosas: strings.Split(dados[SEQ_FAMOSA], ";"),
 		}
