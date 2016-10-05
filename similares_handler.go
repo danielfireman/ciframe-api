@@ -138,20 +138,22 @@ func (s *Similares) GetHandler() httprouter.Handle {
 		var response []*SimilaresResponse
 		for mID := range musicasSimilares.Iter() {
 			m := musicasDict[mID.(string)]
-			mArcordesSet := m.Acordes()
-			response = append(response, &SimilaresResponse{
-				UniqueID:     m.UniqueID,
-				IDArtista:    m.IDArtista,
-				ID:           m.ID,
-				Artista:      m.Artista,
-				Nome:         m.Nome,
-				Popularidade: m.Popularidade,
-				Acordes:      mArcordesSet.ToSlice(),
-				Genero:       m.Genero,
-				URL:          m.URL,
-				Diferenca:    mArcordesSet.Difference(acordes).ToSlice(),
-				Intersecao:   mArcordesSet.Intersect(acordes).ToSlice(),
-			})
+			mAcordesSet := m.Acordes()
+			if mAcordesSet.Cardinality() > 1 && queryValues.Get("id_unico_musica") != m.UniqueID {
+				response = append(response, &SimilaresResponse{
+					UniqueID:     m.UniqueID,
+					IDArtista:    m.IDArtista,
+					ID:           m.ID,
+					Artista:      m.Artista,
+					Nome:         m.Nome,
+					Popularidade: m.Popularidade,
+					Acordes:      mAcordesSet.ToSlice(),
+					Genero:       m.Genero,
+					URL:          m.URL,
+					Diferenca:    mAcordesSet.Difference(acordes).ToSlice(),
+					Intersecao:   mAcordesSet.Intersect(acordes).ToSlice(),
+				})
+			}
 		}
 
 		buildSegment.End()

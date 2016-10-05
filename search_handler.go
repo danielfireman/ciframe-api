@@ -53,8 +53,14 @@ func SearchHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 			musicasRes = append(musicasRes, m)
 		}
 	}
-	sort.Sort(PorPopularidade(musicasRes))
+	// Quando não existem músicas, retorna um array vazio.
+	if len(musicasRes) == 0 {
+		fmt.Fprintf(w, "[]")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
+	sort.Sort(PorPopularidade(musicasRes))
 	var resultado []SearchResponse
 	i, f := limitesDaPagina(len(musicasRes), pagina)
 	for _, m := range musicasRes[i:f] {
@@ -70,7 +76,6 @@ func SearchHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 		})
 
 	}
-
 	b, err := json.Marshal(resultado)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

@@ -95,20 +95,20 @@ type Musica struct {
 	Tom          string   `json:"tom"`
 }
 
-func UniqueID(artista, id string) string {
-	return fmt.Sprintf("%s_%s", artista, id)
-}
-
-func URL(artista, id string) string {
-	return fmt.Sprintf("http://www.cifraclub.com.br/%s/%s", artista, id)
-}
-
 func (m *Musica) Acordes() sets.Set {
 	acordes := sets.NewSet()
 	for _, c := range m.Cifra {
 		acordes.Add(c)
 	}
 	return acordes
+}
+
+func UniqueID(artista, id string) string {
+	return fmt.Sprintf("%s_%s", artista, id)
+}
+
+func URL(artista, id string) string {
+	return fmt.Sprintf("http://www.cifraclub.com.br/%s/%s", artista, id)
 }
 
 // PorPopularidade implementa sort.Interface for []*Musica baseado no campo Popularidade
