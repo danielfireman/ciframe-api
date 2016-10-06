@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -14,8 +16,6 @@ import (
 	"github.com/newrelic/go-agent"
 	"gopkg.in/go-redis/cache.v4"
 	"gopkg.in/redis.v4"
-	"gopkg.in/square/go-jose.v1/json"
-	"net/url"
 )
 
 func main() {
