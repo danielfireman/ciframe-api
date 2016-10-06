@@ -40,10 +40,6 @@ func (p PorMenorDiferenca) Less(i, j int) bool {
 	return len(p[i].Diferenca) < len(p[j].Diferenca)
 }
 
-type Similares struct {
-	app newrelic.Application
-}
-
 var sequencias = map[string]int{
 	"BmGDA":   0,
 	"CGAmF":   1,
@@ -53,8 +49,17 @@ var sequencias = map[string]int{
 	"CC7FFm":  5,
 }
 
+type Similares struct {
+	app  newrelic.Application
+	fila chan struct{}
+}
+
 func (s *Similares) GetHandler() httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		// Controlando acesso concorrente;
+		s.fila <- struct{}{}
+		defer func() { <-s.fila }()
+
 		txn := s.app.StartTransaction("similares", w, r)
 		defer txn.End()
 

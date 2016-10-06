@@ -43,7 +43,8 @@ func main() {
 	router.GET("/generos", MonitoredEndpoint(app, "generos", g.GetHandler()))
 	router.OPTIONS("/generos", openCORS)
 
-	s := Similares{app}
+	// Controlando o acesso concorrente: 10 requisições por segundo.
+	s := Similares{app, make(chan struct{}, 10)}
 	router.GET("/similares", s.GetHandler())
 	router.OPTIONS("/similares", openCORS)
 
