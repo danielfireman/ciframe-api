@@ -3,14 +3,17 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	sets "github.com/deckarep/golang-set"
 	"github.com/julienschmidt/httprouter"
 	"github.com/newrelic/go-agent"
+	"gopkg.in/go-redis/cache.v4"
 )
 
 type SimilaresResponse struct {
@@ -50,15 +53,18 @@ var sequencias = map[string]int{
 }
 
 type Similares struct {
-	app  newrelic.Application
-	fila chan struct{}
+	app   newrelic.Application
+	fila  chan struct{}
+	cache *cache.Codec
 }
 
 func (s *Similares) GetHandler() httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		// Controlando acesso concorrente;
 		s.fila <- struct{}{}
-		defer func() { <-s.fila }()
+		defer func() {
+			<-s.fila
+		}()
 
 		txn := s.app.StartTransaction("similares", w, r)
 		defer txn.End()
@@ -69,8 +75,22 @@ func (s *Similares) GetHandler() httprouter.Handle {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		generosABuscar := generosFromRequest(r)
 
+		// Primeiro coisa a fazer é olhar o cache.
+		var response []*SimilaresResponse
+		if err := s.cache.Get(r.URL.RawQuery, &response); err == nil && len(response) != 0 {
+			b, err := s.toBytes(r.URL.RawQuery, response, pagina)
+			if err != nil {
+				log.Printf("Erro processando request [%s]: '%q'", r.URL.String(), err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			w.Header().Add("Access-Control-Allow-Origin", "*")
+			fmt.Fprintf(w, string(b))
+			return
+		}
+
+		generosABuscar := generosFromRequest(r)
 		if queryValues.Get("sequencia") != "" {
 			acordes := strings.Replace(queryValues.Get("sequencia"), ",", "", -1)
 			var response []*SimilaresResponse
@@ -96,9 +116,9 @@ func (s *Similares) GetHandler() httprouter.Handle {
 					}
 
 				}
-				sort.Sort(PorMenorDiferenca(response))
-				b, err := json.Marshal(response)
+				b, err := s.toBytes(r.URL.RawQuery, response, pagina)
 				if err != nil {
+					log.Printf("Erro processando request [%s]: '%q'", r.URL.String(), err)
 					w.WriteHeader(http.StatusInternalServerError)
 					return
 				}
@@ -108,7 +128,7 @@ func (s *Similares) GetHandler() httprouter.Handle {
 			}
 		}
 
-		// tratamento do requist.s
+		// tratamento do requists
 		acordes := sets.NewSet()
 		switch {
 		case queryValues.Get("acordes") != "":
@@ -140,7 +160,7 @@ func (s *Similares) GetHandler() httprouter.Handle {
 			}
 			musicasSimilares = musicasSimilares.Intersect(porGenero)
 		}
-		var response []*SimilaresResponse
+
 		for mID := range musicasSimilares.Iter() {
 			m := musicasDict[mID.(string)]
 			mAcordesSet := m.Acordes()
@@ -160,23 +180,36 @@ func (s *Similares) GetHandler() httprouter.Handle {
 				})
 			}
 		}
-
 		buildSegment.End()
-		sortSegment := newrelic.StartSegment(txn, "similares_sort")
-		sort.Sort(PorMenorDiferenca(response))
-		sortSegment.End()
-
-		i, f := limitesDaPagina(len(response), pagina)
-
-		marshallingSegment := newrelic.StartSegment(txn, "similares_marshalling")
-		b, err := json.Marshal(response[i:f])
+		b, err := s.toBytes(r.URL.RawQuery, response, pagina)
 		if err != nil {
+			log.Printf("Erro processando request [%s]: '%q'", r.URL.String(), err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		marshallingSegment.End()
-
 		w.Header().Add("Access-Control-Allow-Origin", "*")
 		fmt.Fprintf(w, string(b))
 	}
+}
+
+func (s *Similares) toBytes(cacheKey string, response []*SimilaresResponse, pagina int) ([]byte, error) {
+	// Para retornar, primeiro ordenamos
+	sort.Sort(PorMenorDiferenca(response))
+
+	// Consideramos os limites da página.
+	i, f := limitesDaPagina(len(response), pagina)
+
+	// Colocamos no cache.
+	s.cache.Set(&cache.Item{
+		Key:        cacheKey,
+		Object:     response[i:f],
+		Expiration: time.Hour,
+	})
+
+	// Convertemos para JSON.
+	b, err := json.Marshal(response[i:f])
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }

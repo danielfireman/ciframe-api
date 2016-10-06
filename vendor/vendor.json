@@ -58,6 +58,72 @@
 			"path": "golang.org/x/text/unicode/norm",
 			"revision": "e3c902a8b2c4c420ce61514795e05b8e28a6364e",
 			"revisionTime": "2016-06-07T23:38:40+02:00"
+		},
+		{
+			"checksumSHA1": "+4r0PnLwwyhO5/jvU5R/TEJb4kA=",
+			"path": "gopkg.in/bsm/ratelimit.v1",
+			"revision": "db14e161995a5177acef654cb0dd785e8ee8bc22",
+			"revisionTime": "2016-02-20T15:49:07Z"
+		},
+		{
+			"checksumSHA1": "P4BCGdVxcA9j9sVNZmdNXtcJMPQ=",
+			"path": "gopkg.in/go-redis/cache.v4",
+			"revision": "ed32ac7265c1e7f36f8422ce1b8860040959683a",
+			"revisionTime": "2016-09-21T12:09:23Z"
+		},
+		{
+			"checksumSHA1": "dPWqHMDBC4vzoUE1Xsv8MteZTTM=",
+			"path": "gopkg.in/go-redis/cache.v4/internal/singleflight",
+			"revision": "ed32ac7265c1e7f36f8422ce1b8860040959683a",
+			"revisionTime": "2016-09-21T12:09:23Z"
+		},
+		{
+			"checksumSHA1": "Uqt+g31ZUMN6SU+KkB4QXD7qQVI=",
+			"path": "gopkg.in/go-redis/cache.v4/lrucache",
+			"revision": "ed32ac7265c1e7f36f8422ce1b8860040959683a",
+			"revisionTime": "2016-09-21T12:09:23Z"
+		},
+		{
+			"checksumSHA1": "CKEuRia+Qsk0UcWie9f/TxW6zpU=",
+			"path": "gopkg.in/redis.v4",
+			"revision": "5a272d03b960a72c61e5025a7d6e8da5d8815442",
+			"revisionTime": "2016-10-02T13:00:31Z"
+		},
+		{
+			"checksumSHA1": "4HbfnrL1KOz/6nsdBAPeL0oUXzc=",
+			"path": "gopkg.in/redis.v4/internal",
+			"revision": "5a272d03b960a72c61e5025a7d6e8da5d8815442",
+			"revisionTime": "2016-10-02T13:00:31Z"
+		},
+		{
+			"checksumSHA1": "l+1jiOGUyjHP0u0mB+KiT/UHVcY=",
+			"path": "gopkg.in/redis.v4/internal/consistenthash",
+			"revision": "5a272d03b960a72c61e5025a7d6e8da5d8815442",
+			"revisionTime": "2016-10-02T13:00:31Z"
+		},
+		{
+			"checksumSHA1": "XxoAGEMN5ZCJJ3FeDMSTVhvscHg=",
+			"path": "gopkg.in/redis.v4/internal/errors",
+			"revision": "5a272d03b960a72c61e5025a7d6e8da5d8815442",
+			"revisionTime": "2016-10-02T13:00:31Z"
+		},
+		{
+			"checksumSHA1": "6XSNzBg5bzd2TjEfC/q41tPT/Zg=",
+			"path": "gopkg.in/redis.v4/internal/hashtag",
+			"revision": "5a272d03b960a72c61e5025a7d6e8da5d8815442",
+			"revisionTime": "2016-10-02T13:00:31Z"
+		},
+		{
+			"checksumSHA1": "fYkMv2BMIeHKM1VirUzJ7A/jG7w=",
+			"path": "gopkg.in/redis.v4/internal/pool",
+			"revision": "5a272d03b960a72c61e5025a7d6e8da5d8815442",
+			"revisionTime": "2016-10-02T13:00:31Z"
+		},
+		{
+			"checksumSHA1": "BGzuM8ZpMCmTKWnb/3CtrV4OwDU=",
+			"path": "gopkg.in/redis.v4/internal/proto",
+			"revision": "5a272d03b960a72c61e5025a7d6e8da5d8815442",
+			"revisionTime": "2016-10-02T13:00:31Z"
 		}
 	],
 	"rootPath": "github.com/danielfireman/ciframe-api"

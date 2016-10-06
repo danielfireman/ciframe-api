@@ -12,6 +12,10 @@ import (
 	sets "github.com/deckarep/golang-set"
 	"github.com/julienschmidt/httprouter"
 	"github.com/newrelic/go-agent"
+	"gopkg.in/go-redis/cache.v4"
+	"gopkg.in/redis.v4"
+	"gopkg.in/square/go-jose.v1/json"
+	"net/url"
 )
 
 func main() {
@@ -32,6 +36,12 @@ func main() {
 	}
 	log.Println("Monitoramento NewRelic configurado com sucesso.")
 
+	redisCache, err := Redis(os.Getenv("REDIS_URL"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Redis cache conectado.")
+
 	loadData()
 	log.Println("Dados carregados com sucesso.")
 
@@ -44,7 +54,7 @@ func main() {
 	router.OPTIONS("/generos", openCORS)
 
 	// Controlando o acesso concorrente: 10 requisições por segundo.
-	s := Similares{app, make(chan struct{}, 10)}
+	s := Similares{app, make(chan struct{}, 10), redisCache}
 	router.GET("/similares", s.GetHandler())
 	router.OPTIONS("/similares", openCORS)
 
@@ -169,4 +179,26 @@ func applyFiltro(generos sets.Set) []*Musica {
 		}
 	}
 	return collection
+}
+
+func Redis(u string) (*cache.Codec, error) {
+	if u == "" {
+		return nil, fmt.Errorf("$REDIS_URL must be set")
+	}
+	redisURL, err := url.Parse(u)
+	if err != nil || redisURL.User == nil {
+		return nil, fmt.Errorf("Ocorreu um erro no parse da URL REDIS ou o usuário não foi determinado. err:'%q'\n", err)
+	}
+	pwd, ok := redisURL.User.Password()
+	if !ok {
+		return nil, fmt.Errorf("Não foi possível extrair a senha de REDIS_URL: %s", redisURL)
+	}
+	return &cache.Codec{
+		Redis: redis.NewClient(&redis.Options{
+			Addr:     redisURL.Host,
+			Password: pwd,
+		}),
+		Marshal:   json.Marshal,
+		Unmarshal: json.Unmarshal,
+	}, nil
 }

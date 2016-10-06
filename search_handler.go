@@ -15,14 +15,15 @@ import (
 )
 
 type SearchResponse struct {
-	IDArtista    string `json:"id_artista"`
-	UniqueID     string `json:"id_unico_musica"`
-	Genero       string `json:"genero"`
-	ID           string `json:"id_musica"`
-	Artista      string `json:"nome_artista"`
-	Nome         string `json:"nome_musica"`
-	URL          string `json:"url"`
-	Popularidade int    `json:"popularidade"`
+	IDArtista    string        `json:"id_artista"`
+	UniqueID     string        `json:"id_unico_musica"`
+	Genero       string        `json:"genero"`
+	ID           string        `json:"id_musica"`
+	Artista      string        `json:"nome_artista"`
+	Nome         string        `json:"nome_musica"`
+	URL          string        `json:"url"`
+	Popularidade int           `json:"popularidade"`
+	Acordes      []interface{} `json:"acordes"`
 }
 
 // Busca por músicas que possuem no título ou no nome do artista o argumento passado por key.
@@ -73,6 +74,7 @@ func SearchHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 			Nome:         m.Nome,
 			URL:          m.URL,
 			Popularidade: m.Popularidade,
+			Acordes:      m.Acordes().ToSlice(),
 		})
 
 	}
