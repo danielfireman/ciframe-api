@@ -203,7 +203,7 @@ func (s *Similares) toBytes(cacheKey string, response []*SimilaresResponse, pagi
 	s.cache.Set(&cache.Item{
 		Key:        cacheKey,
 		Object:     response[i:f],
-		Expiration: time.Hour,
+		Expiration: 6 * time.Hour,
 	})
 
 	// Convertemos para JSON.
