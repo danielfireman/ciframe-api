@@ -53,8 +53,8 @@ func main() {
 	router.GET("/generos", MonitoredEndpoint(app, "generos", g.GetHandler()))
 	router.OPTIONS("/generos", openCORS)
 
-	// Controlando o acesso concorrente: 10 requisições por segundo.
-	s := Similares{app, make(chan struct{}, 10), redisCache}
+	// Controlando o acesso concorrente: 5 requisições por segundo.
+	s := Similares{app, make(chan struct{}, 5), redisCache}
 	router.GET("/similares", s.GetHandler())
 	router.OPTIONS("/similares", openCORS)
 
